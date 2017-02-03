@@ -46,6 +46,12 @@ public class Main {
         // Convert from JSON to java object
         BattleshipModel deserializedModel = gson.fromJson(req.body(), BattleshipModel.class);
 
+	//debugging
+	bool DEBUG = true;
+	if(DEBUG){
+	   assert(deserializedModel.battleship.length==4)		//I assume battleship length must be 4
+	}
+
         return deserializedModel;
     }
 
