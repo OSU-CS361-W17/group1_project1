@@ -30,16 +30,20 @@ public class Main {
 
     //This function should return a new model
     private static String newModel() {
-        return null;
-    }
+        BattleshipModel bsModel = new BattleshipModel();
+        Gson gson = new Gson();
 
+        // Convert from Java object to JSON
+        String newModel = gson.toJson(bsModel, BattleshipModel.class);
+        return newModel;
+    }
 
     /*
     ** Function: private static BattleshipModel getModelFromReq
-    * Parameters: Request req - the HTML request object
-    * Description: This function should accept an HTTP request and deseralize it into an actual Java object.
-    * Return: Deserialized battleshipModel object sent by client
-     */
+    ** Parameters: Request req - the HTML request object
+    ** Description: This function should accept an HTTP request and deseralize it into an actual Java object.
+    ** Return: Deserialized battleshipModel object sent by client
+    */
     private static BattleshipModel getModelFromReq(Request req){
         Gson gson = new Gson();
 
@@ -55,7 +59,17 @@ public class Main {
         return deserializedModel;
     }
 
-    private static void placeShipAt(int length, int xCoord, int yCoord, boolean direction, Ship userShip)
+    /*
+    ** Function: private static void placeShipAt
+    ** Parameters: int length - length of chosen ship
+    **             int xCoord - starting x coordinate of ship
+    **             int yCoord - starting y coordinate of ship
+    **             boolean direction - the orientation of the ship
+    **             Ship userShip - Ship object that is to be changed
+    ** Description: This function manipulates the game model based on the parameters in the url]
+    ** Return: None
+    */
+    private static void placeShipAt(int length, int xCoord, int yCoord, boolean direction, Ship userShip, BattleshipModel curModel)
     {
         if(direction)
         {
@@ -76,12 +90,24 @@ public class Main {
     //This controller should take a json object from the front end, and place the ship as requested, and then return the object.
     private static String placeShip(Request req) {
 
-        //get Json object that contains user coordinates
+        //get model that contains user coordinates
         BattleshipModel curModel = getModelFromReq(req);
 
-        //get string-type information
+        //debugging
+        boolean DEBUG = true;
+
+        if(DEBUG){
+            //checks if model contains data other than 0
+            assert(curModel.battleship.length==4);
+        }
+
+        //get string-type information from json request
         String type = req.params("type");                    //ship type
-        String newOrientation = req.params("orientation");   //vert. or horiz.
+        String newOrientation = req.params("orientation");   //vertical or horizontal
+
+        if(DEBUG){
+            assert(type != null);
+        }
 
         //set direction flag
         boolean direction = false;
@@ -92,24 +118,29 @@ public class Main {
         int yCoord = Integer.parseInt(req.params("col"));
 
         //get length of ship type from ship container
-        int length, endCoord;
+            //then place the ship at a location
         if(type == "AircraftCarrier")
         {
-            placeShipAt(curModel.aircraftCarrier.length, xCoord, yCoord, direction, curModel.aircraftCarrier);
+            placeShipAt(curModel.aircraftCarrier.length, xCoord, yCoord, direction, curModel.aircraftCarrier, curModel);
         }else if(type == "Battleship")
         {
-            placeShipAt(curModel.battleship.length, xCoord, yCoord, direction, curModel.battleship);
+            placeShipAt(curModel.battleship.length, xCoord, yCoord, direction, curModel.battleship, curModel);
         }else if(type == "Cruiser")
         {
-            placeShipAt(curModel.cruiser.length, xCoord, yCoord, direction, curModel.cruiser);
+            placeShipAt(curModel.cruiser.length, xCoord, yCoord, direction, curModel.cruiser, curModel);
         }else if(type == "Destroyer")
         {
-            placeShipAt(curModel.destroyer.length, xCoord, yCoord, direction, curModel.destroyer);
+            placeShipAt(curModel.destroyer.length, xCoord, yCoord, direction, curModel.destroyer, curModel);
         }else if(type == "Submarine")
         {
-            placeShipAt(curModel.submarine.length, xCoord, yCoord, direction, curModel.submarine);
+            placeShipAt(curModel.submarine.length, xCoord, yCoord, direction, curModel.submarine, curModel);
         }
-        return null;
+
+        Gson gson = new Gson();
+        String JsonModel = gson.toJson(curModel, BattleshipModel.class);
+        System.out.println(JsonModel);
+
+        return JsonModel;
     }
 
     //Similar to placeShip, but with firing.
@@ -123,8 +154,211 @@ public class Main {
             send update to newModel to update the game board, showing damaged ship
         else the hit lands in the water, return message saying they missed
             send update to newModel to update board, showing missed spot
-        
          */
+
+        BattleshipModel recentModel = getModelFromReq(req);
+
+        int row = Integer.parseInt(req.params("row"));                    //row of fire
+        int col = Integer.parseInt(req.params("col"));                    //column of fire
+
+        int startCoordAcross, startCoordDown, endCoordAcross, endCoordDown;     //starting/ending point of ships across (rows) and down(col)
+
+        /*-----check aircraftCarrier-----
+         * This process is the same for every ship model-----*/
+        startCoordAcross = recentModel.aircraftCarrier.start.Across;            //x (row) start value
+        endCoordAcross   = recentModel.aircraftCarrier.end.Across;              //x (row) end value
+
+        Coord coord = new Coord();
+        coord.setCoords(row, col);                                              //init Coord class
+
+        for(int i = startCoordAcross; i <= endCoordAcross; i++){                //check x coord (row) against all x coord (row) of aircraftCarrier
+            if(row == i){                                                       //if there is a match, check the y coordinates
+                startCoordDown = recentModel.aircraftCarrier.start.Down;        //y (col) start value
+                endCoordDown   = recentModel.aircraftCarrier.end.Down;          //y (col) end value
+
+                for(int j = startCoordDown; j <= endCoordDown; j++){            //check y coord(col) against all y coord (col) of aircraftCarrier
+                    if(col == j){                                               //if match, then that is a hit on the ship. Update playerHit array
+                        recentModel.playerHits.add(coord);                      //append 1 elements to arrayList
+                        //add x coord (row) to the playerHits arrayList to the last element
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                    else{                                                       //if no match, it is a miss. Update playerMiss
+                        recentModel.playerMisses.add(coord);                        //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+
+                    }
+                }
+            }
+            else{                                                               //if no match, it is a miss. Move on to check next ship
+                recentModel.playerMisses.add(coord);                                //append  element to arrayList
+
+                Gson gson = new Gson();                                              //return updated JSON file
+                String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                System.out.println(JsonModel);
+                return JsonModel;
+            }
+        }
+
+        /*-----check battleShip-----*/
+        startCoordAcross = recentModel.battleship.start.Across;         //x (row) start value
+        endCoordAcross   = recentModel.battleship.end.Across;           //x (row) end value
+
+        for(int i = startCoordAcross; i <= endCoordAcross; i++){        //check x coord (row) against all x coord (row) of battleship
+            if(row == i){                                               //if there is a match, check the y coordinates
+                startCoordDown = recentModel.battleship.start.Down;     //y (col) start value
+                endCoordDown   = recentModel.battleship.end.Down;       //y (col) end value
+
+                for(int j = startCoordDown; j <= endCoordDown; j++){    //check y coord(col) against all y coord (col) of battleship
+                    if(col == j){                                       //if match, then that is a hit on the ship
+                        recentModel.playerHits.add(coord);                  //append 1 element to arrayList
+
+                        Gson gson = new Gson();                         //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                    else{                                                 //if no match, it is a miss. Move on to check next ship
+                        recentModel.playerMisses.add(coord);                  //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                }
+            }
+            else{                                                       //if no match, it is a miss. Move on to check next ship
+                recentModel.playerMisses.add(coord);                        //append 1 elements to arrayList
+
+                Gson gson = new Gson();                                              //return updated JSON file
+                String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                System.out.println(JsonModel);
+                return JsonModel;
+            }
+        }
+        /*-----check cruiser-----*/
+        startCoordAcross = recentModel.cruiser.start.Across;            //x (row) start value
+        endCoordAcross   = recentModel.cruiser.end.Across;              //x (row) end value
+
+        for(int i = startCoordAcross; i <= endCoordAcross; i++){        //check x coord (row) against all x coord (row) of cruiser
+            if(row == i){                                               //if there is a match, check the y coordinates
+                startCoordDown = recentModel.cruiser.start.Down;        //y (col) start value
+                endCoordDown   = recentModel.cruiser.end.Down;          //y (col) end value
+
+                for(int j = startCoordDown; j <= endCoordDown; j++){    //check y coord(col) against all y coord (col) of cruiser
+                    if(col == j){                                       //if match, then that is a hit on the ship
+                        recentModel.playerHits.add(coord);                  //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                             //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                    else{                                               //if no match, it is a miss. Move on to check next ship
+                        recentModel.playerMisses.add(coord);                //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                }
+            }
+            else{                                                       //if no match, it is a miss. Move on to check next ship
+                recentModel.playerMisses.add(coord);                        //append 1 elements to arrayList
+
+                Gson gson = new Gson();                                              //return updated JSON file
+                String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                System.out.println(JsonModel);
+                return JsonModel;
+            }
+        }
+
+        /*-----check destroyer-----*/
+        startCoordAcross = recentModel.destroyer.start.Across;          //x (row) start value
+        endCoordAcross   = recentModel.destroyer.end.Across;            //x (row) end value
+
+        for(int i = startCoordAcross; i <= endCoordAcross; i++){        //check x coord (row) against all x coord (row) of destroyer
+            if(row == i){                                               //if there is a match, check the y coordinates
+                startCoordDown = recentModel.destroyer.start.Down;      //y (col) start value
+                endCoordDown   = recentModel.destroyer.end.Down;        //y (col) end value
+
+                for(int j = startCoordDown; j <= endCoordDown; j++){    //check y coord(col) against all y coord (col) of destroyer
+                    if(col == j){                                       //if match, then that is a hit on the ship
+                        recentModel.playerHits.add(coord);                  //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                          //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                    else{                                                //if no match, it is a miss. Move on to check next ship
+                        recentModel.playerMisses.add(coord);                 //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                }
+            }
+            else{                                                        //if no match, it is a miss. Move on to check next ship
+                recentModel.playerMisses.add(coord);                        //append 1 elements to arrayList
+
+                Gson gson = new Gson();                                              //return updated JSON file
+                String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                System.out.println(JsonModel);
+                return JsonModel;
+            }
+        }
+
+        /*-----check submarine-----*/
+        startCoordAcross = recentModel.submarine.start.Across;           //x (row) start value
+        endCoordAcross   = recentModel.submarine.end.Across;             //x (row) end value
+
+        for(int i = startCoordAcross; i <= endCoordAcross; i++){        //check x coord (row) against all x coord (row) of submarine
+            if(row == i){                                               //if there is a match, check the y coordinates
+                startCoordDown = recentModel.submarine.start.Down;      //y (col) start value
+                endCoordDown   = recentModel.submarine.end.Down;        //y (col) end value
+
+                for(int j = startCoordDown; j <= endCoordDown; j++){    //check y coord(col) against all y coord (col) of submarine
+                    if(col == j){                                       //if match, then that is a hit on the ship
+                        recentModel.playerHits.add(coord);                  //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                          //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                    else{                                                //if no match, it is a miss. Move on to check next ship
+                        recentModel.playerMisses.add(coord);                 //append 1 elements to arrayList
+
+                        Gson gson = new Gson();                                              //return updated JSON file
+                        String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                        System.out.println(JsonModel);
+                        return JsonModel;
+                    }
+                }
+            }
+            else{                                                        //if no match, it is a miss. Move on to check next ship
+                recentModel.playerMisses.add(coord);                         //append 1 elements to arrayList
+
+                Gson gson = new Gson();                                              //return updated JSON file
+                String JsonModel = gson.toJson(recentModel, BattleshipModel.class);
+                System.out.println(JsonModel);
+                return JsonModel;
+
+            }
+        }
+
         return null;
     }
 }

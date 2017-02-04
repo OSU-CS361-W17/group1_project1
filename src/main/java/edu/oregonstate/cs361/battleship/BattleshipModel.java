@@ -19,7 +19,7 @@ public class BattleshipModel {
     public Ship computer_cruiser;
     public Ship computer_destroyer;
     public Ship computer_submarine;
-    public ArrayList<Coord> playerHits;
+    public ArrayList<Coord> playerHits;         //store coordinates from user hits here. i.e., "user hit at [2][2], [2][3]..."
     public ArrayList<Coord> playerMisses;
     public ArrayList<Coord> computerHits;
     public ArrayList<Coord> computerMisses;
@@ -42,14 +42,12 @@ public class BattleshipModel {
     ** Description: Initializes aircraftCarrier, battleship, cruiser, destroyer, and submarine;
     ** Return: None
     */
-    private void InitUserShips(){
+    public void InitUserShips(){
         aircraftCarrier = new Ship("AircraftCarrier", 5);
         battleship = new Ship("Battleship", 4);
         cruiser = new Ship("Cruiser", 3);
         destroyer = new Ship("Destroyer", 2);
         submarine = new Ship("Submarine", 2);
-        playerHits = new ArrayList<Coord>();
-        playerMisses = new ArrayList<Coord>();
     }
 
     /*
@@ -58,7 +56,7 @@ public class BattleshipModel {
     ** Description: Initializes computer_aircraftCarrier, computer_battleship, computer_cruiser, computer_destroyer, and computer_submarine;
     ** Return: None
     */
-    private void InitComputerShips(){
+    public void InitComputerShips(){
         computer_aircraftCarrier = new Ship("AircraftCarrier", 5);
         computer_aircraftCarrier.start.setCoords(2, 2);
         computer_aircraftCarrier.end.setCoords(2, 7);
@@ -82,23 +80,10 @@ public class BattleshipModel {
     ** Description: The game board is 10x10, and the sum of all the ship's lengths are 16, therefore a user can have a maximum of 16 hits, and 84 misses
     ** Return: None
     */
-    private void InitLists(){
+    public void InitLists(){
         playerHits = new ArrayList<Coord>();
         playerMisses = new ArrayList<Coord>();
         computerHits = new ArrayList<Coord>();
         computerMisses = new ArrayList<Coord>();
     }
-
-    /*
-    ** Function Name: generateCoordinates
-    ** Parameters: None
-    ** Description: Generates random coordinates for the computerHits
-    **              ships
-    ** Return: randomCoordinates
-    */
-    private Coord[] generateCoordinates(){
-        // TODO: Generate random coordinates
-        return null;
-    }
-
 }
