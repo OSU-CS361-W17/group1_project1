@@ -63,7 +63,7 @@ public class Main {
     ** Description: This function manipulates the game model based on the parameters in the url]
     ** Return: None
     */
-    private static void placeShipAt(int length, int xCoord, int yCoord, boolean direction, Ship userShip)
+    private static void placeShipAt(int length, int xCoord, int yCoord, boolean direction, Ship userShip, BattleshipModel curModel)
     {
         if(direction)
         {
@@ -84,12 +84,24 @@ public class Main {
     //This controller should take a json object from the front end, and place the ship as requested, and then return the object.
     private static String placeShip(Request req) {
 
-        //get Json object that contains user coordinates
+        //get model that contains user coordinates
         BattleshipModel curModel = getModelFromReq(req);
 
-        //get string-type information
+        //debugging
+        boolean DEBUG = true;
+
+        if(DEBUG){
+            //checks if model contains data other than 0
+            assert(curModel.battleship.length==4);
+        }
+
+        //get string-type information from json request
         String type = req.params("type");                    //ship type
-        String newOrientation = req.params("orientation");   //vert. or horiz.
+        String newOrientation = req.params("orientation");   //vertical or horizontal
+
+        if(DEBUG){
+            assert(type != null);
+        }
 
         //set direction flag
         boolean direction = false;
@@ -100,24 +112,29 @@ public class Main {
         int yCoord = Integer.parseInt(req.params("col"));
 
         //get length of ship type from ship container
-        int length, endCoord;
+            //then place the ship at a location
         if(type == "AircraftCarrier")
         {
-            placeShipAt(curModel.aircraftCarrier.length, xCoord, yCoord, direction, curModel.aircraftCarrier);
+            placeShipAt(curModel.aircraftCarrier.length, xCoord, yCoord, direction, curModel.aircraftCarrier, curModel);
         }else if(type == "Battleship")
         {
-            placeShipAt(curModel.battleship.length, xCoord, yCoord, direction, curModel.battleship);
+            placeShipAt(curModel.battleship.length, xCoord, yCoord, direction, curModel.battleship, curModel);
         }else if(type == "Cruiser")
         {
-            placeShipAt(curModel.cruiser.length, xCoord, yCoord, direction, curModel.cruiser);
+            placeShipAt(curModel.cruiser.length, xCoord, yCoord, direction, curModel.cruiser, curModel);
         }else if(type == "Destroyer")
         {
-            placeShipAt(curModel.destroyer.length, xCoord, yCoord, direction, curModel.destroyer);
+            placeShipAt(curModel.destroyer.length, xCoord, yCoord, direction, curModel.destroyer, curModel);
         }else if(type == "Submarine")
         {
-            placeShipAt(curModel.submarine.length, xCoord, yCoord, direction, curModel.submarine);
+            placeShipAt(curModel.submarine.length, xCoord, yCoord, direction, curModel.submarine, curModel);
         }
-        return null;
+
+        Gson gson = new Gson();
+        String JsonModel = gson.toJson(curModel, BattleshipModel.class);
+        System.out.println(JsonModel);
+
+        return JsonModel;
     }
 
     //Similar to placeShip, but with firing.
