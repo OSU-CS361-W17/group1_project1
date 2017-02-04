@@ -92,6 +92,7 @@ public class Main {
 
         if(DEBUG){
             //checks if model contains data other than 0
+            //debugging for Nick
             assert(curModel.battleship.length==4);
         }
 
