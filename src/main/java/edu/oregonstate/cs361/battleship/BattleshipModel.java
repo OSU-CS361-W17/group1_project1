@@ -48,8 +48,6 @@ public class BattleshipModel {
         cruiser = new Ship("Cruiser", 3);
         destroyer = new Ship("Destroyer", 2);
         submarine = new Ship("Submarine", 2);
-        playerHits = new ArrayList<Coord>();
-        playerMisses = new ArrayList<Coord>();
     }
 
     /*
@@ -88,18 +86,4 @@ public class BattleshipModel {
         computerHits = new ArrayList<Coord>();
         computerMisses = new ArrayList<Coord>();
     }
-
-    /*
-    ** Function Name: generateCoordinates
-    ** Parameters: None
-    ** Description: Generates random coordinates for the computerHits
-    **              ships
-    ** Return: randomCoordinates
-    */
-
-    public Coord[] generateCoordinates(){
-        // TODO: Generate random coordinates
-        return null;
-    }
-
 }
