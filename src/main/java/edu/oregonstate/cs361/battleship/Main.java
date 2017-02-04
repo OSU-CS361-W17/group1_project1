@@ -117,13 +117,7 @@ public class Main {
         {
             placeShipAt(curModel.submarine.length, xCoord, yCoord, direction, curModel.submarine);
         }
-
-
-        // Reserialize
-        Gson gson = new Gson();
-        String jsonModel = gson.toJson(curModel, BattleshipModel.class);
-        System.out.println(jsonModel);
-        return jsonModel;
+        return null;
     }
 
     //Similar to placeShip, but with firing.
